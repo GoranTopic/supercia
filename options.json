@@ -1,0 +1,12 @@
+{
+		"debugging": true,
+		"proxyRotation": true,
+		"concurrent_processes": 1,
+		"browser": {
+				"headless": true,
+				"slowMo": 1,
+				"excludeSwitches": "enable-automation",
+				"args": [ "--proxy-server=138.50.50.50:38886" ]
+		}
+
+}
