@@ -38,4 +38,5 @@ const mkdir = path =>
 				}
 		});
 
-export { getText, read_json, mkdir }
+export { write_json, read_json, mkdir }
+

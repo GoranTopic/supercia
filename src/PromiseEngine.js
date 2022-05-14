@@ -29,26 +29,52 @@ export default class PromiseEngine {
 		/* returns a new from the promise soruces specified */
 		_getNewPromise(){
 				let newPromise = null;
-				if(this.promiseArray){
+				// if it is coming from an array
+				if(this.promiseArray){ 
+						// if array is empty
 						if(this.promiseArray.length === 0){
 								this.halt = true;
 								throw new Error('list has no more values')
-						}else 
-								newPromise = this.promiseArray.shift();
+						}else{ 
+								// get new value
+								let result = this.promiseArray.shift();
+								// if it has callback 
+								if( result instanceof Array ){ 
+										let callback = null;
+										[ newPromise, callback ]  = result;
+										newPromise.callback = callback;
+										// if it doesnot have a callback
+								}else newPromise = result;
+						}
 				}else if(this.nextPromise){
+						// if it is coming from an function
 						let next = this.nextPromise();
 						if(!next){
 								this.halt = true;
 								throw new Error('next promise function gave null value')
-						}else 
-								newPromise = next
+						}else{
+								// got callback
+								if( next instanceof Array ){ 
+										let callback = null;
+										[ newPromise, callback ]  = next;
+										newPromise.callback = callback;
+								}else // no callback			
+										newPromise = next
+						}
 				}else if(this.promiseGen){
+						// if it is coming from an generator
 						let next = this.promiseGen.next();
 						if(next.done){
 								this.halt = true;
 								throw new Error('promise generator reached it end')
-						}else 
-								newPromise = next.value;
+						}else{ // got callback
+								if( next.value instanceof Array ){ 
+										let callback = null;
+										[ newPromise, callback ]  = next.value;
+										newPromise.callback = callback;
+								}else // no callback			
+										newPromise = next.value
+						}
 				}else throw new Error('most set a promise source')
 				if(newPromise === null) throw new Error('could not get new promise')
 				else return newPromise;
@@ -65,10 +91,10 @@ export default class PromiseEngine {
 				/* promise wrapper for promise, a promise condom, if you will... */
 				// Don't create a wrapper for promises that can already be queried.
 				if (promise.isResolved) return promise;
+				var callback = promise.callback ?? null;
 				var isResolved = false
 				var isFulfilled = false;
 				var isRejected = false;
-				var isTimedOut = false;
 				var value = null;
 				var result;
 				// if it has timedout
@@ -88,6 +114,7 @@ export default class PromiseEngine {
 				result.isResolved  = function() { return isFulfilled || isRejected };
 				result.isFulfilled = function() { return isFulfilled };
 				result.isRejected  = function() { return isRejected };
+				if(callback) result.callback = function() { callback( value ) };
 				return result;
 		}
 
@@ -117,6 +144,9 @@ export default class PromiseEngine {
 																// if the promise has been resolved
 																if(this.resolvedCB) //if ther is has a resolved cb, run it
 																		newPromise = this.resolvedCB( this.promises[i].getValue() ); 
+																// if the promise as an attached callback
+																if(this.promises[i].callback) 
+																		newPromise = this.promises[i].callback(); 
 																// add it as a new promise
 																// if promise if rejected
 																if(this.promises[i].isRejected()) // if there was an error

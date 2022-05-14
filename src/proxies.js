@@ -1,5 +1,5 @@
-import { initBrowserDecorator } from './decorators.js';
-import { getText } from './utils.js';
+import { initBrowserDecorator } from './utils/decorators.js';
+import getText from './utils/getText.js';
 import fs from 'fs';
 
 const free_proxy_list_net = async page => {
@@ -18,7 +18,6 @@ const free_proxy_list_net = async page => {
 		Array(3).fill().map( () => proxies.shift() );
 		// remove 1 lower unwanted debries
 		proxies.pop();
-
 		return proxies
 }
 
@@ -73,7 +72,7 @@ const testProxies = async browser => {
 		}
 		
 const get_premium_proxies = () => {
-		let filename =  './resources/proxies/proxyscrape_premium_http_proxies.txt',
+		let filename =  './data/resources/proxies/proxyscrape_premium_http_proxies.txt',
 				proxies = [];
 		try{
 				let data = fs.readFileSync(filename, 'utf-8')
@@ -109,7 +108,6 @@ class ProxyRotator {
 				this.queue = this.queue.filter( proxy => proxy.proxy !== str )
 				this.dead = this.dead.filter( proxy => proxy.proxy !== str )
 		}
-
 
 		remove_proxy_from_queue(str){
 				// remove proxy from queue
@@ -215,24 +213,5 @@ class ProxyRotator {
 		}
 
 }
-
-/*
-const r = new ProxyRotator();
-
-let proxy = r.next()
-console.log(proxy)
-
-r.setAlive(proxy)
-proxy = r.next()
-console.log(proxy)
-
-proxy = r.getAlive()
-console.log(proxy)
-
-r.setDead(proxy)
-console.log(proxy)
-r.setAlive(proxy)
-console.log(proxy)
-*/
 
 export { ProxyRotator, testProxies, get_free_online_proxies, get_premium_proxies }

@@ -1,6 +1,7 @@
 /* getter an setter for cookie files */
+import fs from 'fs'
 // cookie file
-const cookies_filename = '../../data/resources/cookies.json'
+const cookies_filename = './data/resources/cookies/cookies.json'
 
 const save_cookies = async page =>{
 		/* this function save from the browser */

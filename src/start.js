@@ -6,9 +6,9 @@ import scrapper from './scrapers/company_scrapper.js'
 const promiseEngine = null;
 const proxyRotator = null;
 
-
-function new_promise = () => {
+const new_promise = async () => New Promise.race
 // create timeout process
+
 const create_timeout_promise = 
 		async ( names, missing_index, proxy, retries = 0 ) => {
 				let timeout_base = 1000
@@ -24,7 +24,6 @@ const create_timeout_promise =
 								}, timeout_base * Math.random() )
 						).catch(e => { throw e })
 		}
-
 
 }
 

@@ -1,5 +1,7 @@
 async function getText(elementHandler){
 		/* this function make my life easier by just printin the txt content of a elementHandler */
+		if(!elementHandler) throw Error('Got null constructor value in getText');
+		// handle elementHandler
 		const handleElement = async element => {
 				//console.log('name:', element.constructor.name)
 				if( element.constructor.name === 'ElementHandle' ){
@@ -11,8 +13,10 @@ async function getText(elementHandler){
 						return null
 				}
 		}
-		if( elementHandler instanceof Array ){ // handle multiple elements
-				let strings = []; // if it is a array of ElementHandle
+		// handle multiple elements
+		if( elementHandler instanceof Array ){ 
+				// if it is a array of ElementHandle
+				let strings = []; 
 				for(let i = 0; i < elementHandler.length; i++)
 						strings.push( await handleElement(elementHandler[i]) )
 				return strings; // return array of strings

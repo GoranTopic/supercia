@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "\" scrpper for the super intencecia de companias de Ecuador\" ",
   "main": "main.js",
+  "type": "module",
   "scripts": {
-    "test": "node test.js"
+    "test": "node tests/test.js",
+    "test_proxies": "node tests/proxies.js",
+    "test_timeout": "node tests/setTimeout.js",
+    "test_proxy_rotator": "node tests/proxy_rotator.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +30,7 @@
   "homepage": "https://github.com/GoranTopic/supercia_scrapper#readme",
   "dependencies": {
     "chalk": "^5.0.1",
-    "puppeteer": "^14.0.0"
+    "puppeteer": "^14.0.0",
+    "tesseract.js": "^2.1.5"
   }
 }
