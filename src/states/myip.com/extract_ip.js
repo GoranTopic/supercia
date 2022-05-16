@@ -8,6 +8,7 @@ let target_url = 'https://www.myip.com/'
 // make home page condition
 const is_in_page = async browser => {
 		// if it dow not have a page yet, and it is at null url
+		console.log( (await browser.pages() )[0].url );
 	let result =	( await browser.pages() ).length === 1 &&
 				(( await browser.pages() )[0].url === target_url )
 		if(result) console.log('condition is true')
@@ -16,6 +17,8 @@ const is_in_page = async browser => {
 }
 
 const extract_ip_and_exit_script = async (browser, proxy) => {
+		// wait a second
+		await waitUntilRequestDone(page, 100)
 		// select public ip
 		let ip_span = ( await page.$x('//span[@id="ip"]') )[0];
 		// get ip
