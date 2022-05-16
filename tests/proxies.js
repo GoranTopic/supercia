@@ -11,7 +11,7 @@ import puppeteer from 'puppeteer';
 let browserOptions = read_json('./options.json').browser;
 
 async function main(){
-		let engine = new PromiseEngine(1);
+		let engine = new PromiseEngine(10);
 		let proxy_r = new ProxyRotator();
 		let proxy_list = proxy_r.getList();
 		let checklist = new Checklist('testProxies', proxy_list);
