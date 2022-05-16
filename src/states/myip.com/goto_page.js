@@ -8,7 +8,7 @@ let target_url = 'https://www.myip.com/'
 const has_open_tab_and_null_url = async browser => 
 		// if it dow not have a page yet, and it is at null url
 		( await browser.pages() ).length === 1 &&
-				(( await browser.pages() )[0].url)
+				( ( await browser.pages() )[0].url() )
 
 
 // script to handle the home page

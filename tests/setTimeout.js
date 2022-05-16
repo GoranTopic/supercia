@@ -15,8 +15,7 @@ async function main(){
 		let error_max = 100;
 		
 		// create timeout process
-		const create_timeout_promise = 
-				async ( name, proxy, retries = 0 ) => {
+		const create_timeout_promise = async ( name, proxy, retries = 0 ) => {
 						let timeout_base = 1000 * 60 * 0.001
 						if(name) 
 								return new Promise( async ( resolve, reject ) => 

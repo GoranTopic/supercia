@@ -17,3 +17,6 @@ console.log(proxy)
 
 r.setAlive(proxy)
 console.log(proxy)
+
+console.log("all proxies:" +r.getAliveList().length )
+console.log("proxies left alive:" +r.getAliveList().length )

@@ -54,9 +54,9 @@ export default class PromiseEngine {
 								throw new Error('next promise function gave null value')
 						}else{
 								// got callback
-								if( next instanceof Array ){ 
+								if( next instanceof Array ){  
 										let callback = null;
-										[ newPromise, callback ]  = next;
+										[ newPromise, callback ] = next;
 										newPromise.callback = callback;
 								}else // no callback			
 										newPromise = next
@@ -125,12 +125,12 @@ export default class PromiseEngine {
 				let result;
 				// promises container
 				this.promises = Array(this.concorrent_promises).fill(null);
-				// create promises
-				for( let i = 0; i < this.promises.length; i++ )
-						this.promises[i] = this._promiseMonitor( this._getNewPromise() )
 				//if no stop function as been set run forever 
 				if(this.stopFunction === null) this.stopFunction = () => false;
 				else this.halt = this.stopFunction();
+				// create promises
+				for( let i = 0; i < this.promises.length; i++ )
+						this.promises[i] = this._promiseMonitor( this._getNewPromise() )
 				// start the loop
 				while( !this.halt ){
 						// check all processes
@@ -141,31 +141,32 @@ export default class PromiseEngine {
 												// if there is no process active
 												for( let i = 0; i < this.promises.length; i++ )
 														// for every every processes
-														if(this.promises[i].isResolved()){
-																// set new promise to none
-																let newPromise = null;
-																// if the promise has been resolved
-																if(this.resolvedCB) //if ther is has a resolved cb, run it
-																		newPromise = this.resolvedCB( this.promises[i].getValue() ); 
-																// if the promise as an attached callback
-																if(this.promises[i].callback)
-																		newPromise = this.promises[i].callback(); 
-																// add it as a new promise
-																// if promise if rejected
-																if(this.promises[i].isRejected()) // if there was an error
-																		if(this.rejectionCB) // if a new promise has been returned
-																				newPromise = this.rejectionCB( this.promises[i].getValue() );
-																// if it was successfull
-																if(this.promises[i].isFulfilled())
-																		//console.log('is fulfilled');
-																		if(this.fulfillmentCB) // if a new promise has been returned
-																				newPromise = this.fulfillmentCB( this.promises[i].getValue() );
-																// if no new promise has been set 
-																if(newPromise) // if new promise has been passed
-																		this.promises[i] = this._promiseMonitor(newPromise);
-																else // get new one
-																		this.promises[i] = this._promiseMonitor( this._getNewPromise() );
+												if(this.promises[i].isResolved()){
+														// set new promise to none
+														let newPromise = null;
+														// if the promise has been resolved
+														if(this.resolvedCB) //if ther is has a resolved cb, run it
+																newPromise = this.resolvedCB( this.promises[i].getValue() ); 
+														// if the promise as an attached callback
+														if(this.promises[i].callback){
+																newPromise = this.promises[i].callback(); 
 														}
+														// add it as a new promise
+														// if promise if rejected
+														if(this.promises[i].isRejected()) // if there was an error
+																if(this.rejectionCB) // if a new promise has been returned
+																		newPromise = this.rejectionCB( this.promises[i].getValue() );
+														// if it was successfull
+														if(this.promises[i].isFulfilled())
+																//console.log('is fulfilled');
+																if(this.fulfillmentCB) // if a new promise has been returned
+																		newPromise = this.fulfillmentCB( this.promises[i].getValue() );
+														// if no new promise has been set 
+														if(newPromise) // if new promise has been passed
+																this.promises[i] = this._promiseMonitor(newPromise);
+														else // get new one
+																this.promises[i] = this._promiseMonitor( this._getNewPromise() );
+												}
 												// run stop function
 												this.halt = this.stopFunction();
 												// is this working?

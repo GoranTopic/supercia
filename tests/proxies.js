@@ -4,6 +4,7 @@ import { read_json } from '../src/utils/files.js';
 import { Checklist } from '../src/progress.js';
 import goto_page from '../src/states/myip.com/goto_page.js'
 import extract_ip from '../src/states/myip.com/extract_ip.js'
+import close_browser from '../src/states/myip.com/close_browser.js'
 import puppeteer from 'puppeteer';
 
 // options of browser
@@ -15,42 +16,45 @@ async function main(){
 		let proxy_list = proxy_r.getList();
 		let checklist = new Checklist('testProxies', proxy_list);
 		let banded_proxies = [];
-		let error_max = 5;
+		let error_max = 2;
 
 		// set timeout 1000ms * 60s * 1m
-		engine.setTimeout(1000 * 60 * 1/2 );
+		engine.setTimeout(1000 * 60 * 1 );
 
 		// create timeout process
-		const create_promise = async ( proxy, retries = 0 ) =>  {
-				// set new proxy
-				browserOptions.args = [ `--proxy-server=${ proxy.proxy }` ];
-				// create new browser
-				const browser = await puppeteer.launch(browserOptions)
-				// retun new promise
-				return new Promise( async ( resolve, reject ) => {
+		const create_promise =  async ( proxy, retries = 0 ) => 
+				new Promise( async ( resolve, reject ) => {
+						// set new proxy
+						browserOptions.args = [ `--proxy-server=${ proxy.proxy }` ];
+						// create new browser
+						const browser = await puppeteer.launch(browserOptions)
+						// retun new promise
 						let max_state_tries = 3;
 						let state_tries = 0;
 						while( state_tries < max_state_tries ){
-								try{ // if empty browser go to target page
-										//console.log("this ran");
-										await goto_page(browser);
-										// try to extract ip
-										let ip = await extract_ip(browser, proxy);
-										// check the result
-										if(ip) resolve({ ip, proxy, tries })
-										else reject({ proxy, error:'Could not get ip' })
-								}catch(e) {
-										throw e;
-										//reject({ proxy, error:'Something whent wrong' });
+								//console.log("this ran");
+								await goto_page(browser);
+								// try to extract ip
+								let ip = await extract_ip(browser, proxy);
+								// check the result
+								if(ip){
+										console.log('got ip:' + ip)
+										resolve({ ip, proxy, browser })
+										return 
+								}
+								else{
+										await close_browser(browser);
+										reject({ proxy, error: 'Could not get ip' })
+										return 
 								}
 								state_tries ++;
 						}
-				}).catch(e => { throw e })
-		}
+				}).catch(e => e)
+
 
 		// create timeout process
 		const create_callback = ( proxy, retries = 0) => 
-				async result =>  {
+				result =>  {
 						console.log("callback ran");
 						// if there was an error
 						if(result.error){ 
@@ -62,29 +66,29 @@ async function main(){
 								else // let's try it again 
 										return create_promise( proxy, retries + 1) 
 						}else // proxy was successfull
-								checklist.check(proxy)
+								checklist.check(proxy.proxy)
 				}
 
 		// set promise next function
 		engine.setNextPromise( () => {
-				let proxy = proxy_r.next();
+				let proxy = checklist.nextMissing()
 				let promise = create_promise( proxy )
 				let callback = create_callback( proxy )
-				return [ promise, callback ] 
+				return [ promise, callback ]
 		});
 
 		//set stop function
 		engine.setStopFunction( () => {
-				if(proxy_r.getAliveList.length === 0) return true
+				if(proxy_r.getAliveList().length === 0) return true
 				else return false
 		})
 		// when fuffiled
 		engine.whenFulfilled(
-				result => console.log(`resolved: ${result.proxy} with ip: ${result.ip}`)
+				result => console.log(`resolved: ${result.proxy.proxy} with ip: ${result.ip}`)
 		)
 		// when rejected
 		engine.whenRejected(
-				result => console.log(`rejected: ${result.proxy} with error: ${result.error}`)
+				result => console.log(`rejected: ${result.proxy.proxy} with error: ${result.error}`)
 		)
 		//engine.whenResolved(isResolved_callback);
 		await engine.start()
