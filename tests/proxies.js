@@ -1,142 +1,91 @@
-import { ProxyRotator, testProxies } from '../src/proxies.js'
-import { read_json, write_json } from '../src/utils/files.js';
-import { save_cookies, read_cookies } from '../src/utils/cookies.js'
+import { ProxyRotator } from '../src/proxies.js'
 import PromiseEngine from '../src/PromiseEngine.js';
-import getText from '../src/utils/getText.js';
+import { read_json } from '../src/utils/files.js';
+import { Checklist } from '../src/progress.js';
+import goto_page from '../src/states/myip.com/goto_page.js'
+import extract_ip from '../src/states/myip.com/extract_ip.js'
 import puppeteer from 'puppeteer';
 
-let options = read_json('./options.json');
-let browserOptions = options.browser;
-
-// create new browser
-const start_new_browser = async ( proxy, options ) => {
-		options.args = [ `--proxy-server=${ proxy.proxy }` ];
-		//console.log(`launching browser with proxy: ${options.args}`);
-		return ( await puppeteer.launch(options) );
-}
-
-// create timeout process
-const create_proxy_test_promise = async ( index, proxy, retries = 0 ) =>  
-		new Promise( async ( resolve, reject ) => {
-				// make promise
-				let target_url = 'https://www.myip.com/'
-				// launch browser
-				let browser = await start_new_browser(proxy, browserOptions);
-				// get page
-				let page = ( await browser.pages() )[0];
-				// read cookies
-				await read_cookies(page);
-				//console.log(('got cookies'));
-				// goto website  wait until the page is fully loaded
-				//console.log('page to load');
-				await page.goto( target_url, { waitUntil: 'domcontentloaded', });
-				//console.log('network idle')
-				// select public ip
-				let ip_span = ( await page.$x('//span[@id="ip"]') )[0];
-				// get ip
-				let ip = await getText(ip_span);
-				// save them cookies
-				await save_cookies(page)
-				// close browser
-				await browser.close();
-				// return if successfull
-				if(ip) resolve({ index, ip, proxy })
-				else reject({ index, ip, proxy, error: 'could not get ip' })
-		}).catch(e => { throw e })
-
-// setters and getting for saving the checklist
-const checklist_filename = './data/resources/checklist/proxy_test_checklist.json';
-const save_checklist = checklist => write_json(checklist, checklist_filename);
-const get_checklist = () => read_json(checklist_filename) ?? [];
-
-// start and check integiry of the missing items
-const check_proxy_integrity = (names, checklist) => {
-		let missing = [];
-		let table = Array(names.length).fill(null);
-		names.forEach( ( name, index ) => // just check if the something there
-				checklist[index]?
-				table[index] = checklist[index] : missing.push(index)
-		)
-		return [ missing, table ];
-}
+// options of browser
+let browserOptions = read_json('./options.json').browser;
 
 async function main(){
-		/* the main show */
-		let engine = new PromiseEngine(7);
+		let engine = new PromiseEngine(1);
 		let proxy_r = new ProxyRotator();
-		let checklist = get_checklist();
-		let names = read_json('./data/mined/company_names_sample.json');
-		let error_max = 3;
-		let missing_indexes = [];
-		let errored_indexes = [];
+		let proxy_list = proxy_r.getList();
+		let checklist = new Checklist('testProxies', proxy_list);
+		let banded_proxies = [];
+		let error_max = 5;
 
-		const isResolved_callback = result => 
-				console.log(`resolved: ${result.index}`);
-
-		const isRejected_callback = error => {
-				// if there was an error
-				if(error.message === 'timed out'){
-						console.error(error);
-						return 
-				}
-				//console.log(errored_indexes);
-				console.log(`rejected: ${error.name}.\n    retries: ${error.retries} with error: ${error.error}`);
-				// set proxy as dead
-				proxy_r.setDead(error.proxy);
-				// if there have been many tries before
-				if(error.retries > error_max){
-						// set new missing value to errored
-						errored_indexes.push(error.index);
-				}else // same missing value, new proxy, +1 tried  
-						return create_timeout_promise(
-								names, error.index, proxy_r.next(), error.retries + 1 
-						)
-		}
-
-		const whenProxyRejected = result => {
-				// if there was an error
-				if(result.message === 'timed out'){
-						console.error(result);
-						return 
-				}
-				console.log(`rejected: ${result.proxy}`);
-				proxy_r.setDead(result.proxy);
-				return create_proxy_test_promise( proxy_r.next() );
-		}
-
-		const whenProxyFufilled = result => {
-				// if it was successfull
-				console.log(`fulfilled: ${result.ip}`);
-				// set proxy as alive
-				proxy_r.setAlive(result.proxy);
-				// mark name to checklist at index
-				checklist[result.index] = result.ip;
-				// save checklist
-				save_checklist(checklist);
-		}
-
-		const stopFunction = () => {
-				if(missing_indexes.length === 0) return true
-				else return false
-		}
-
-		/* proxy test */
-		// get missing and check integrity
-		[ missing_indexes, checklist ] = check_proxy_integrity(names, checklist)
-		// saved checked list
-		console.log(missing_indexes)
-		save_checklist(checklist);
-		// set promise next function
-		engine.setNextPromise( () => 
-				create_proxy_test_promise( missing_indexes.shift(), proxy_r.next() )
-		);
 		// set timeout 1000ms * 60s * 1m
 		engine.setTimeout(1000 * 60 * 1/2 );
+
+		// create timeout process
+		const create_promise = async ( proxy, retries = 0 ) =>  {
+				// set new proxy
+				browserOptions.args = [ `--proxy-server=${ proxy.proxy }` ];
+				// create new browser
+				const browser = await puppeteer.launch(browserOptions)
+				// retun new promise
+				return new Promise( async ( resolve, reject ) => {
+						let max_state_tries = 3;
+						let state_tries = 0;
+						while( state_tries < max_state_tries ){
+								try{ // if empty browser go to target page
+										//console.log("this ran");
+										await goto_page(browser);
+										// try to extract ip
+										let ip = await extract_ip(browser, proxy);
+										// check the result
+										if(ip) resolve({ ip, proxy, tries })
+										else reject({ proxy, error:'Could not get ip' })
+								}catch(e) {
+										throw e;
+										//reject({ proxy, error:'Something whent wrong' });
+								}
+								state_tries ++;
+						}
+				}).catch(e => { throw e })
+		}
+
+		// create timeout process
+		const create_callback = ( proxy, retries = 0) => 
+				async result =>  {
+						console.log("callback ran");
+						// if there was an error
+						if(result.error){ 
+								// set proxy dead
+								proxy_r.setDead(result.proxy);
+								// stop trying if many tries
+								if(result.retries > 5) 
+										banded_proxies.push(proxy)
+								else // let's try it again 
+										return create_promise( proxy, retries + 1) 
+						}else // proxy was successfull
+								checklist.check(proxy)
+				}
+
+		// set promise next function
+		engine.setNextPromise( () => {
+				let proxy = proxy_r.next();
+				let promise = create_promise( proxy )
+				let callback = create_callback( proxy )
+				return [ promise, callback ] 
+		});
+
 		//set stop function
-		engine.setStopFunction(stopFunction);
-		// set call backs 
-		engine.whenRejected(whenProxyRejected);
-		engine.whenFulfilled(whenProxyFufilled);
+		engine.setStopFunction( () => {
+				if(proxy_r.getAliveList.length === 0) return true
+				else return false
+		})
+		// when fuffiled
+		engine.whenFulfilled(
+				result => console.log(`resolved: ${result.proxy} with ip: ${result.ip}`)
+		)
+		// when rejected
+		engine.whenRejected(
+				result => console.log(`rejected: ${result.proxy} with error: ${result.error}`)
+		)
 		//engine.whenResolved(isResolved_callback);
 		await engine.start()
 		// done message

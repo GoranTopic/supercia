@@ -87,8 +87,8 @@ class ProxyRotator {
 		constructor(){
 				this.queue = []
 				this.dead = [];
-				// 1000ms * 60s * 60m = 1h
-				this.timeout_rate = 1000 * 60 * 60;
+				// 1000ms * 60s * 30m = 30m
+				this.timeout_rate = 1000 * 60 * 30;
 				// get initial proxies
 				let initial_proxy_pool = [
 						...get_premium_proxies()
@@ -203,6 +203,10 @@ class ProxyRotator {
 				}
 				this.dead.push(proxy);
 		})
+
+		getList = () => [ ...this.queue, ...this.dead ] 
+
+		getAliveList = () => this.queue
 
 		resurect_proxy( proxy, status="Unknown" ){
 				this.remove_proxy_from_dead(proxy.proxy);

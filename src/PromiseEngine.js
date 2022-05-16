@@ -77,7 +77,7 @@ export default class PromiseEngine {
 						}
 				}else throw new Error('most set a promise source')
 				if(newPromise === null) throw new Error('could not get new promise')
-				else return newPromise;
+				else return newPromise
 		}
 
 		// this is a timeout 
@@ -86,6 +86,7 @@ export default class PromiseEngine {
 						setTimeout(() => reject(new Error(`timed out`)), timeout);
 				}
 		)
+
 
 		_promiseMonitor(promise) {
 				/* promise wrapper for promise, a promise condom, if you will... */
@@ -108,16 +109,17 @@ export default class PromiseEngine {
 				result.then(
 						function(v) { isFulfilled = true; value = v; return v; }, 
 						function(e) { isRejected = true; value = e; throw e; }
-				) 
+				).catch(e => { 
+						throw e;
+				}) 
 				// getters
 				result.getValue    = function() { return value };
 				result.isResolved  = function() { return isFulfilled || isRejected };
 				result.isFulfilled = function() { return isFulfilled };
 				result.isRejected  = function() { return isRejected };
-				if(callback) result.callback = function() { callback( value ) };
+				if(callback) result.callback = function() { return callback( value ) };
 				return result;
 		}
-
 
 		async start(){
 				let result;
@@ -128,6 +130,7 @@ export default class PromiseEngine {
 						this.promises[i] = this._promiseMonitor( this._getNewPromise() )
 				//if no stop function as been set run forever 
 				if(this.stopFunction === null) this.stopFunction = () => false;
+				else this.halt = this.stopFunction();
 				// start the loop
 				while( !this.halt ){
 						// check all processes
@@ -145,7 +148,7 @@ export default class PromiseEngine {
 																if(this.resolvedCB) //if ther is has a resolved cb, run it
 																		newPromise = this.resolvedCB( this.promises[i].getValue() ); 
 																// if the promise as an attached callback
-																if(this.promises[i].callback) 
+																if(this.promises[i].callback)
 																		newPromise = this.promises[i].callback(); 
 																// add it as a new promise
 																// if promise if rejected
