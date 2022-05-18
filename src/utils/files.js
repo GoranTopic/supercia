@@ -22,6 +22,16 @@ const read_json = path => {
 		}
 }
 
+const delete_json = path => {
+		try{
+				return fs.unlinkSync(path);
+		}catch(e) {
+				console.error('could not delete json file ' + e);
+				return null
+		}
+}
+
+
 const mkdir = path => 
 		fs.access(path, (error) => {
 				if (error) {
@@ -38,5 +48,5 @@ const mkdir = path =>
 				}
 		});
 
-export { write_json, read_json, mkdir }
+export { write_json, read_json, delete_json, mkdir }
 

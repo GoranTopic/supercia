@@ -6,7 +6,7 @@ const company_page = 'https://appscvs1.supercias.gob.ec/portalCia/contenedor.zul
 
 const company_documents_page_base = 'https://appscvsmovil.supercias.gob.ec/portaldedocumentos'
 
-const company_documents_page = 'https://appscvsmovil.supercias.gob.ec/portaldedocumentos/consulta_cia_menu.zul'
+const busqueda_de_companias = 'https://appscvsconsultas.supercias.gob.ec/consultaCompanias/busquedaCompanias.jsf'
 
 const base_url_download = 'https://appscvsmovil.supercias.gob.ec/'
 
@@ -27,7 +27,7 @@ const isAtCompanyDocumentsPage = page => {
 		let re  = new RegExp(company_documents_page_base + ".*");
 		let url = page.url();
 		let base = url.match(re);
-		let same = url === company_documents_page;
+		let same = url === busqueda_de_companias;
 		if(base || same) return true
 		else return false
 }
@@ -36,6 +36,7 @@ export {
 		consulta_principal_url,
 		home_page_url,
 		base_url_download,
+		busqueda_de_companias,
 		isAtCompanyDocumentsPage,
 		isAtConsultaPrincipal,
 		isAtHomePage,

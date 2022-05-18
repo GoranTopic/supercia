@@ -1,17 +1,14 @@
 import Tesseract from 'tesseract.js';
 
-const recognizeNumbers = async file  => {
-		const result = null
+const recognizeNumbers = async file  => 
 		await Tesseract.recognize(
 				file,
 				'eng',
 				//{ logger: m => console.log(m) }
 		).then( 
-				({ data: { text } }) => result = text 
+				({ data: { text } }) => text 
 		).catch(
 				e => console.error(e)
 		) 
-		return result;
-}
 
 export default recognizeNumbers

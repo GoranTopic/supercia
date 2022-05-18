@@ -22,35 +22,33 @@ async function main(){
 		engine.setTimeout(1000 * 60 * 1 );
 
 		// create timeout process
-		const create_promise =  async ( proxy, retries = 0 ) => 
-				new Promise( async ( resolve, reject ) => {
-						// set new proxy
-						browserOptions.args = [ `--proxy-server=${ proxy.proxy }` ];
-						// create new browser
-						const browser = await puppeteer.launch(browserOptions)
-						// retun new promise
-						let max_state_tries = 3;
-						let state_tries = 0;
-						while( state_tries < max_state_tries ){
-								//console.log("this ran");
-								await goto_page(browser);
-								// try to extract ip
-								let ip = await extract_ip(browser, proxy);
-								// check the result
-								if(ip){
-										console.log('got ip:' + ip)
-										resolve({ ip, proxy, browser })
-										return 
-								}
-								else{
-										await close_browser(browser);
-										reject({ proxy, error: 'Could not get ip' })
-										return 
-								}
-								state_tries ++;
+		const create_promise =  async ( proxy, retries = 0 ) => {
+				// set new proxy
+				browserOptions.args = [ `--proxy-server=${ proxy.proxy }` ];
+				// create new browser
+				const browser = await puppeteer.launch(browserOptions)
+				// retun new promise
+				let max_state_tries = 3;
+				let state_tries = 0;
+				while( state_tries < max_state_tries ){
+						//console.log("this ran");
+						await goto_page(browser);
+						// try to extract ip
+						let ip = await extract_ip(browser, proxy);
+						// check the result
+						if(ip){
+								console.log('got ip:' + ip)
+								//resolve({ ip, proxy })
+								return { ip, proxy } 
 						}
-				}).catch(e => e)
-
+						else{
+								await close_browser(browser);
+								//reject({ proxy, error: 'Could not get ip' })
+								return { proxy, error: 'Could not get ip' }
+						}
+						state_tries ++;
+				}
+		}
 
 		// create timeout process
 		const create_callback = ( proxy, retries = 0) => 
@@ -84,7 +82,7 @@ async function main(){
 		})
 		// when fuffiled
 		engine.whenFulfilled(
-				result => console.log(`resolved: ${result.proxy.proxy} with ip: ${result.ip}`)
+				result => console.log(`fuffiled: ${result.proxy.proxy} with ip: ${result.ip}`)
 		)
 		// when rejected
 		engine.whenRejected(

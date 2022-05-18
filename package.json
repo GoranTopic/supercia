@@ -1,36 +1,37 @@
 {
-  "name": "supercia",
-  "version": "1.0.0",
-  "description": "\" scrpper for the super intencecia de companias de Ecuador\" ",
-  "main": "main.js",
-  "type": "module",
-  "scripts": {
-    "test": "node tests/test.js",
-    "test_proxies": "node tests/proxies.js",
-    "test_timeout": "node tests/setTimeout.js",
-    "test_proxy_rotator": "node tests/proxy_rotator.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/GoranTopic/supercia_scrapper.git"
-  },
-  "keywords": [
-    "SuperCia",
-    "puppeteer",
-    "js",
-    "javascript",
-    "datamining",
-    "scraping"
-  ],
-  "author": "Goran Topic",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/GoranTopic/supercia_scrapper/issues"
-  },
-  "homepage": "https://github.com/GoranTopic/supercia_scrapper#readme",
-  "dependencies": {
-    "chalk": "^5.0.1",
-    "puppeteer": "^14.0.0",
-    "tesseract.js": "^2.1.5"
-  }
+		"name": "supercia",
+		"version": "1.0.0",
+		"description": "\" scrpper for the super intencecia de companias de Ecuador\" ",
+		"main": "main.js",
+		"type": "module",
+		"scripts": {
+				"companies": "node src/scrapers/companies.js",
+				"test": "node tests/test.js",
+				"test_proxies": "node tests/proxies.js",
+				"test_timeout": "node tests/setTimeout.js",
+				"test_proxy_rotator": "node tests/proxy_rotator.js"
+		},
+		"repository": {
+				"type": "git",
+				"url": "git+https://github.com/GoranTopic/supercia_scrapper.git"
+		},
+		"keywords": [
+				"SuperCia",
+				"puppeteer",
+				"js",
+				"javascript",
+				"datamining",
+				"scraping"
+		],
+		"author": "Goran Topic",
+		"license": "ISC",
+		"bugs": {
+				"url": "https://github.com/GoranTopic/supercia_scrapper/issues"
+		},
+		"homepage": "https://github.com/GoranTopic/supercia_scrapper#readme",
+		"dependencies": {
+				"chalk": "^5.0.1",
+				"puppeteer": "^14.0.0",
+				"tesseract.js": "^2.1.5"
+		}
 }
