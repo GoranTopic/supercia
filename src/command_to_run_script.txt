@@ -1,0 +1,3 @@
+cd src 
+node --experimental-repl-await
+let { getText, page  } = await import('./theScript.js')
