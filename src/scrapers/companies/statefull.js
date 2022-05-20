@@ -1,20 +1,21 @@
-import { ProxyRotator } from '../proxies.js'
-import PromiseEngine from '../PromiseEngine.js';
-import { read_json } from '../utils/files.js';
-import { Checklist, DiskList } from '../progress.js';
-import goto_company_search_page from '../states/supercia.gov.ec/goto_company_search_page.js'
-import input_company_name from '../states/supercia.gov.ec/input_company_name.js'
-import close_browser from '../states/supercia.gov.ec/close_browser.js'
+import { ProxyRotator } from '../../proxies.js'
+import PromiseEngine from '../../PromiseEngine.js';
+import { read_json } from '../../utils/files.js';
+import { Checklist, DiskList } from '../../progress.js';
+import goto_company_search_page from '../../states/supercia.gov.ec/goto_company_search_page.js'
+import input_company_name from '../../states/supercia.gov.ec/input_company_name.js'
+import close_browser from '../../states/supercia.gov.ec/close_browser.js'
+import scrap_company from '../../states/supercia.gov.ec/scrap_company.js'
+import options from '../../options.js'
 import puppeteer from 'puppeteer';
 
 // options of browser
-let options = read_json('./options.json');
 let browserOptions = options.browser;
 
 async function main(){
 		let engine = new PromiseEngine(1);
 		let proxy_r = new ProxyRotator();
-		let names = read_json('./data/mined/company_names.json');
+		let names = read_json('./data/mined/names/company_names.json');
 		let checklist = new Checklist('companies', names);
 		let errored = new DiskList('errored_companies');
 		let retries_max = 1;
@@ -31,11 +32,21 @@ async function main(){
 				// retun new promise
 				let max_loop = 1;
 				let loops = 0;
+				let isSuccess = false
 				while( loops < max_loop ){
-						// go to the company
-						await goto_company_search_page(browser);
-						// input company name
-						await input_company_name(browser, name);
+						try{
+								// go to the company
+								await goto_company_search_page(browser);
+								// input company name
+								await input_company_name(browser, name);
+								// scrap comany 
+								//isSuccess = await scrap_company(browser, name);
+								// if we successfull scraped comany
+								//if(isSuccess) await close_browser(browser);
+						}catch(e){ // something went wrong
+								console.error(e)
+								await close_browser(browser)
+						}
 						loops++;
 				}
 		}
@@ -44,7 +55,8 @@ async function main(){
 		const create_callback = ( name, proxy, retries = 0) => 
 				result =>  {
 						// if there was an error
-						if(result.error){ 
+						if(result?.error){ 
+								console.log("this ran");
 								// set proxy dead
 								proxy_r.setDead(result.proxy);
 								// stop trying if many tries
@@ -73,11 +85,11 @@ async function main(){
 		})
 		// when fuffiled
 		engine.whenFulfilled( result => 
-				console.log(`[${result.proxy.proxy}] Fuffiled: ${result.name}`)
+				(result && console.log(`[${result.proxy.proxy}] Fuffiled: ${result.name}`) )
 		)
 		// when rejected
 		engine.whenRejected( result => 
-				console.log(`[${result.proxy.proxy}] Rejected: ${result.name} with ${result.error}`)
+				( result && console.log(`[${result.proxy.proxy}] Rejected: ${result.name} with ${result.error}`) )
 		)
 		//engine.whenResolved(isResolved_callback);
 		await engine.start()
@@ -86,6 +98,6 @@ async function main(){
 
 }
 
-//main();
+main();
  
 export default main

@@ -5,7 +5,7 @@
 		"main": "main.js",
 		"type": "module",
 		"scripts": {
-				"companies": "node src/scrapers/companies.js",
+				"companies": "node src/scrapers/companies/statefull.js",
 				"companies_debug": " NODE_INSPECT_RESUME_ON_START=1 node --experimental-repl-await inspect src/scrapers/companies/scripted.js",
 				"test": "node tests/test.js",
 				"test_proxies": "node tests/proxies.js",

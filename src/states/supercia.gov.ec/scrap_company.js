@@ -1,104 +1,17 @@
-import { read_cookies } from '../../utils/cookies.js'
+import make_state from '../makeState.js';
+import { information_de_companies } from '../../urls.js'
 import getText from '../../utils/getText.js'
-import { busqueda_de_companias } from '../../urls.js'
 import waitUntilRequestDone from '../../utils/waitForNetworkIdle.js'
-import recognizeCaptchan from '../../utils/recognizeNumberCaptchan.js'
-import { write_json, read_json, mkdir, fileExists } from '../..//utils/files.js';
+import { write_json, mkdir, fileExists } from '../..//utils/files.js';
 import download_pdf from '../../utils/download_pdf.js';
 import { Checklist, DiskList } from '../../progress.js';
 import sanitize from '../../utils/sanitizer.js'
-import puppeteer from 'puppeteer';
 import options from '../../options.js'
 
 // set debugging 
 let debugging = options.debugging;
-// options of browser
-let browserOptions = options.browser;
 
-// target 
-let target_url = busqueda_de_companias;
-let names = read_json('./data/mined/names/company_names.json');
-let name = names[3005]; // random name
-//let name = 'fybeca'; // random name
-
-// create new browser
-const browser = await puppeteer.launch(browserOptions)
-
-// get page
-let page = ( await browser.pages() )[0];
-
-// read cookies
-await read_cookies(page);
-
-//console.log('page to load');
-await page.goto( target_url,
-		{ waitUntil: 'networkidle0' });
-
-/* scraps a id from a single company name */
-await waitUntilRequestDone(page, 1000)
-
-// get the radion 
-let [ radio_el ] = await page.$x('//*[text()="Nombre"]/..');
-
-// click on the name radio
-if(radio_el) await radio_el.click();
-else throw new Error('could not radion element')
-
-// until it loads the name
-debugging && console.log("getting text input")
-await waitUntilRequestDone(page, 1000)
-
-// get the main text input
-let [ text_input ] = 
-		await page.$x('//input[@id="frmBusquedaCompanias:parametroBusqueda_input"]')
-
-// type name of company
-debugging && console.log("typing name")
-await waitUntilRequestDone(page, 1000)
-await text_input.type(name, {delay: 10});
-await waitUntilRequestDone(page, 1000)
-
-// remove suggestion
-await page.keyboard.press('Enter');
-
-// wait until for a little
-await waitUntilRequestDone(page, 2000);
-
-// get captchan 
-let captchan = 
-		await page.waitForXPath('//img[@id="frmBusquedaCompanias:captchaImage"]');
-
-// take screenshot of captchan
-let captchan_buffer = await captchan.screenshot();
-
-// recognize the captchan
-debugging && console.log("recognizing captchan...")
-let captchan_text = await recognizeCaptchan(captchan_buffer);
-debugging && console.log("got captchan: " + captchan_text)
-
-// get the captchan input 
-let [ captchan_input ] = 
-		await page.$x('//input[@id="frmBusquedaCompanias:captcha"]')  
-
-// input captchan numbers
-await captchan_input.type(captchan_text, {delay: 130});
-
-// get the search button
-debugging && console.log("getting search button..")
-// get
-let [ search_button ] =
-		await page.$x('//button[@id="frmBusquedaCompanias:btnConsultarCompania"]')
-
-// click seach button
-debugging && console.log("clicking search_button...")
-await search_button.click({delay: 1});
-
-// wait until new page loads
-debugging && console.log("waiting for new page to load...")
-await waitUntilRequestDone(page, 2000);
-
-/* company page */
-/* if there is a credential button */
+/* this function tries to scrap the certificado of general information of a company */
 let get_credential_pdf = async (page, path) => {
 		try{
 				// if there is button
@@ -159,7 +72,7 @@ let scrap_informacion_general = async (page, path) => {
 		return true
 }
 
-let i,tab, selectors, selector, panel_container, panel, panels, cur_path, columns, pdf_column, pdf_name, iframe, coded_src, result, src, rows, tab_name, tab_names, documents_tab_checklist, pdf_names, checklist_row_pdf, checklist_document_tabs, filename;
+/* this function, get the tabs of online documents ans scrap all of them */
 const scrap_documents = async (page, path) => {
 		/* scrap documetns  */
 		console.log('scrap documents ran')
@@ -169,34 +82,34 @@ const scrap_documents = async (page, path) => {
 		let document_tabs = await page.$x('//form[@id="frmInformacionCompanias"]//li')
 		//make usre we got dem tabs
 		if(!document_tabs) throw Error("Could not extract document_tabs")
-		tab_names  = (await getText(document_tabs)).map(t => t.trim());
+		let tab_names  = (await getText(document_tabs)).map(t => t.trim());
 		// make checklist for each document tabs
-		checklist_document_tabs = new Checklist("document_tabs_" + name, tab_names);
+		let checklist_document_tabs = new Checklist("document_tabs_" + name, tab_names);
 		// for each document tab
-		for( i = 0; i < document_tabs.length; i++ ){
+		for(let i = 0; i < document_tabs.length; i++ ){
 				// only run if it not marked
 				if(!checklist_document_tabs.isCheckedOff(tab_names[i])){
 						// get tab
 						await waitUntilRequestDone(page, 1000);
-						tab = document_tabs[i];
+						let tab = document_tabs[i];
 						// make new path 
-						cur_path = path + `/${tab_names[i]}`;
+						let cur_path = path + `/${tab_names[i]}`;
 						mkdir(cur_path)
 						// click on tab
 						await tab.click();
 						// wait for tab to be loaded
 						await waitUntilRequestDone(page, 1000);
 						// get panels 
-						[ panel_container ] = await page.$x('//div[@class="ui-tabs-panels"]')
-						panels = await panel_container.$x('./div')
+						let [ panel_container ] = await page.$x('//div[@class="ui-tabs-panels"]')
+						let panels = await panel_container.$x('./div')
 						// get same pane as clicked tab
 						// wait until pdfs show up
 						console.log("got up to here")
-						panel = panels[i]
+						let panel = panels[i]
 						if(panel) console.log("got panel")
 						// refresh selectors - get selector
 						await waitUntilRequestDone(page, 1000);
-						[ selector ] = await panel.$x('.//select')
+						let [ selector ] = await panel.$x('.//select')
 						if(selector) console.log("got selector")
 						// click selector
 						await selector.click()
@@ -210,17 +123,17 @@ const scrap_documents = async (page, path) => {
 						// wait until pdfs show up
 						await waitUntilRequestDone(page, 1000);
 						// get all pdf even rows
-						rows = await panel.$x( './/tr[@class="ui-widget-content ui-datatable-even"] | .//tr[@class="ui-widget-content ui-datatable-odd"]');
+						let rows = await panel.$x( './/tr[@class="ui-widget-content ui-datatable-even"] | .//tr[@class="ui-widget-content ui-datatable-odd"]');
 						if(rows) console.log("got rows")
 						// for every row in pdf
 						for( let row of rows ){
 								// get name based on the table values
-								columns = await row.$x('./td')
-								pdf_column = columns.pop();
+								let columns = await row.$x('./td')
+								let pdf_column = columns.pop();
 								//await waitUntilRequestDone(page, 1000);
-								pdf_name = ( await getText(columns) ).map( v => v.trim()).join('_')
+								let pdf_name = ( await getText(columns) ).map( v => v.trim()).join('_')
 								// if file doe not exists already
-								filename = cur_path +'/' + sanitize(pdf_name);
+								let filename = cur_path +'/' + sanitize(pdf_name);
 								if(fileExists(filename + ".pdf")){
 										console.log(`Already have pdf: ${filename + ".pdf"}`)
 								}else{ // scrap file
@@ -229,12 +142,12 @@ const scrap_documents = async (page, path) => {
 										// wait until pdfs show up
 										//await waitUntilRequestDone(page, 100);
 										// get url
-										[ iframe ] = await page.$x('//iframe');
+										let [ iframe ] = await page.$x('//iframe');
 										if(iframe) console.log('got iframe');
 										// get the iframe src
-										coded_src = await page.evaluate( iframe => iframe.src, iframe )
+										let coded_src = await page.evaluate( iframe => iframe.src, iframe )
 										// decode src
-										src = decodeURIComponent(coded_src.split('file=')[1])
+										let src = decodeURIComponent(coded_src.split('file=')[1])
 										console.log('got src:', src)
 										// download pdf
 										await download_pdf(src, page, filename)
@@ -264,6 +177,7 @@ const scrap_documents = async (page, path) => {
 		return true
 }
 
+/* this is a list of scrap function mapped their respective tabs, if one is missing, they don't run */
 let tab_scrapers = {
 		'Información general': scrap_informacion_general,
 		'Administradores actuales': null,
@@ -279,60 +193,83 @@ let tab_scrapers = {
 		'Notificaciones generales': null,
 }
 
-// directory
-let companies_dir = '../data/mined/companies/'
-// make directory 
-mkdir(companies_dir)
-// company directory 
-let path = companies_dir + name
-mkdir(path)
 
-// make checklist of values
-let checklist_tabs = new Checklist( "tabs_" + name, Object.keys(tab_scrapers))
+// condition for entering company scrap  state
+const condition = async browser => 
+		// it must have one page an it must be at the company home page
+		( ( await browser.pages() ).length === 1 &&
+				(( await browser.pages() )[0].url() === information_de_companies ) )
 
-//wait until page loads
-await waitUntilRequestDone(page, 500);
+const scrap_companies_script = async ( browser, name ) => {
+		// directory where to stor mined data
+		let companies_dir = './data/mined/companies'
 
-// get page again
-page = ( await browser.pages() )[0];
-console.log('got new page')
+		// make directory, just in case if does not exits, 
+		// but it really should
+		mkdir(companies_dir)
+		
+		// company directory 
+		let path = companies_dir + "/" +name
+		mkdir(path)
 
-//wait until page loads
-await waitUntilRequestDone(page, 500);
+		//make checklist of values
+		let checklist_tabs = new Checklist( "tabs_" + name, Object.keys(tab_scrapers))
+		//wait until page loads
+		await waitUntilRequestDone(page, 500);
 
-// get all tabs elemte
-let [ tabs_element ] = await page.$x('//div[@id="frmMenu:menuPrincipal"]')
-debugging && console.log("got tabs")
+		// get page again
+		page = ( await browser.pages() )[0];
+		console.log('got new page')
 
-// get tabs a tags 
-let tabs = await tabs_element.$x('.//span/..')
+		//wait until page loads
+		await waitUntilRequestDone(page, 500);
 
-// for every tab
-for( let current_tab of tabs ){
-		// get name of the current tab
-		let current_tab_name = await getText(current_tab);
-		// if it has not been checked off
-		if( ! checklist_tabs.isCheckedOff( current_tab_name ) ){
-				// if we hae function for it 
-				if( tab_scrapers[current_tab_name] ){
-						try{
-								await waitUntilRequestDone(page, 1000);
-								// click on first tab 
-								await current_tab.click() // and wait
-								await waitUntilRequestDone(page, 1000);
-								// run function
-								result = await tab_scrapers[current_tab_name](page, path + `/${current_tab_name}`) 
-								// if function successfull, check off list
-								if(result) checklist_tabs.check(current_tab_name)
-						}catch(e){
-								console.error(e)
-						}
-				} 
+		// get all tabs elemte
+		let [ tabs_element ] = await page.$x('//div[@id="frmMenu:menuPrincipal"]')
+		debugging && console.log("got tabs")
+
+		// get tabs a tags 
+		let tabs = await tabs_element.$x('.//span/..')
+
+		// for every tab
+		for( let current_tab of tabs ){
+
+				// get name of the current tab
+				let current_tab_name = await getText(current_tab);
+
+				// if it has not been checked off
+				if( ! checklist_tabs.isCheckedOff( current_tab_name ) ){
+
+						// if we hae function for it 
+						if( tab_scrapers[current_tab_name] ){
+
+								try{
+										await waitUntilRequestDone(page, 1000);
+										
+										// click on first tab 
+										await current_tab.click() // and wait
+										await waitUntilRequestDone(page, 1000);
+
+										result = // run function
+												await tab_scrapers[current_tab_name](
+														page, path + `/${current_tab_name}`
+												) 
+
+										// if function successfull, check off list
+										if(result)
+												checklist_tabs.check(current_tab_name)
+
+								}catch(e){
+										console.error(e)
+								}
+						} 
+				}
 		}
+		return true;
 }
 
-//console.log('closing browser')
-// close browser
-//await browser.close();
-
-export { page, getText, i, tab, selectors, selector, panel_container, panel, panels, cur_path, columns, pdf_column, pdf_name, iframe, coded_src, result, src, rows, tab_name, tab_names, documents_tab_checklist, pdf_names, checklist_row_pdf, checklist_document_tabs }
+// make state
+export default make_state( 
+		condition,
+		scrap_companies_script
+)

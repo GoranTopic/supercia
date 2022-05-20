@@ -1,6 +1,5 @@
 import { read_json, write_json, delete_json } from './utils/files.js'
 
-
 /* this class make a list that is saved disk, and or read from */
 class DiskList{
 		constructor(name, values = null){
@@ -57,7 +56,7 @@ class Checklist{
 				this.values.forEach( value  => { 
 						if(this._isObject(value)) 
 								value = JSON.stringify(value)
-						if(! value in this.checklist)
+						if(! this.checklist[value] )
 								this.missing_values.push(value)
 				})
 		}

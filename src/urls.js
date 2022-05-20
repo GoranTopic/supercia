@@ -8,6 +8,8 @@ const company_documents_page_base = 'https://appscvsmovil.supercias.gob.ec/porta
 
 const busqueda_de_companias = 'https://appscvsconsultas.supercias.gob.ec/consultaCompanias/busquedaCompanias.jsf'
 
+const information_de_companies = 'https://appscvsconsultas.supercias.gob.ec/consultaCompanias/informacionCompanias.jsf'
+
 const base_url_download = 'https://appscvsmovil.supercias.gob.ec/'
 
 const isAtHomePage = page => 
@@ -33,10 +35,11 @@ const isAtCompanyDocumentsPage = page => {
 }
 
 export { 
+		busqueda_de_companias,
+		information_de_companies,
 		consulta_principal_url,
 		home_page_url,
 		base_url_download,
-		busqueda_de_companias,
 		isAtCompanyDocumentsPage,
 		isAtConsultaPrincipal,
 		isAtHomePage,

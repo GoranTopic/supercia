@@ -1,6 +1,11 @@
 import make_state from '../makeState.js';
 import { read_cookies } from '../../utils/cookies.js'
+import waitUntilRequestDone from '../../utils/waitForNetworkIdle.js'
 import { busqueda_de_companias } from '../../urls.js'
+import options from '../../options.js'
+
+// set debugging 
+let debugging = options.debugging;
 
 // target 
 let target_url = busqueda_de_companias;
@@ -11,7 +16,6 @@ const has_open_tab_and_null_url = async browser =>
 		( await browser.pages() ).length === 1 &&
 				( ( await browser.pages() )[0].url() )
 
-
 // script to handle the home page
 const goto_page_script = async browser => {
 		// get page
@@ -19,9 +23,9 @@ const goto_page_script = async browser => {
 		// read cookies
 		await read_cookies(page);
 		//console.log('page to load');
-		await page.goto( target_url,
-				{ waitUntil: 'networkidle0' });
-		//console.log('network idle')
+		await page.goto( target_url, { waitUntil: 'networkidle0' });
+		// wait for page to load
+		await waitUntilRequestDone(page, 1000)
 }
 
 // make home handle state
