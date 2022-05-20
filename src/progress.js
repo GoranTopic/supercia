@@ -27,8 +27,7 @@ class Checklist{
 		/* this function takes list of name name to check and */
 		constructor(name, values){
 				// only for script
-				this.dir_path = '../data/resources/checklist/';
-				//this.dir_path = './data/resources/checklist/';
+				this.dir_path = './data/resources/checklist/';
 				this.name = name + ".json";
 				this.filename = this.dir_path + this.name
 				this.checklist = read_json( this.filename );

@@ -6,6 +6,7 @@
 		"type": "module",
 		"scripts": {
 				"companies": "node src/scrapers/companies.js",
+				"companies_debug": " NODE_INSPECT_RESUME_ON_START=1 node --experimental-repl-await inspect src/scrapers/companies/scripted.js",
 				"test": "node tests/test.js",
 				"test_proxies": "node tests/proxies.js",
 				"test_timeout": "node tests/setTimeout.js",
@@ -32,6 +33,7 @@
 		"dependencies": {
 				"chalk": "^5.0.1",
 				"puppeteer": "^14.0.0",
-				"tesseract.js": "^2.1.5"
+				"tesseract.js": "^2.1.5",
+				"truncate-utf8-bytes": "^1.0.2"
 		}
 }

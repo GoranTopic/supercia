@@ -31,6 +31,15 @@ const delete_json = path => {
 		}
 }
 
+const fileExists = path =>{
+		try{
+				return fs.existsSync(path)  
+		}catch(e) {
+				console.error('could not find file ' + e);
+				return false
+		}
+}
+
 
 const mkdir = path => 
 		fs.access(path, (error) => {
@@ -48,5 +57,5 @@ const mkdir = path =>
 				}
 		});
 
-export { write_json, read_json, delete_json, mkdir }
+export { write_json, read_json, delete_json, mkdir, fileExists }
 
